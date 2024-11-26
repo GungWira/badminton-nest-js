@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @db.VarChar(100)
+  phone     String   @unique
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model DatePlay {
+  id     Int        @id @default(autoincrement())
+  date   DateTime
+  status StatusBool @default(ACTIVE)
+  courts Court[]
+}
+
+model Court {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(100)
+  status     StatusBool @default(ACTIVE)
+  datePlay   DatePlay   @relation(fields: [datePlayId], references: [id])
+  datePlayId Int
+  playTimes  Playtime[]
+}
+
+model Playtime {
+  id           Int            @id @default(autoincrement())
+  start        Int
+  end          Int
+  price        Int
+  status       StatusPlaytime @default(AVALIABLE)
+  date         DateTime
+  court        Court          @relation(fields: [courtId], references: [id])
+  courtId      Int
+  orderDetails OrderDetail[]
+}
+
+model Order {
+  id             Int           @id @default(autoincrement())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         Int
+  orderDate      DateTime      @default(now())
+  status         OrderStatus   @default(PENDING)
+  paymentStatus  PaymentStatus @default(UNPAID)
+  expirationDate DateTime
+  playtimes      OrderDetail[]
+}
+
+model OrderDetail {
+  id         Int      @id @default(autoincrement())
+  playtime   Playtime @relation(fields: [playtimeId], references: [id])
+  playtimeId Int
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    Int
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum StatusBool {
+  ACTIVE
+  UNACTIVE
+}
+
+enum StatusPlaytime {
+  AVALIABLE
+  BOOKED
+  PENDING
+  PASSED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELED
+}
